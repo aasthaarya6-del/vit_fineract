@@ -63,7 +63,8 @@ public class CollateralWritePlatformServiceJpaRepositoryImpl implements Collater
     public CommandProcessingResult addCollateral(final Long loanId, final JsonCommand command) {
 
         this.context.authenticatedUser();
-        final CollateralCommand collateralCommand = this.collateralCommandFromApiJsonDeserializer.commandFromApiJson(command.json());
+        final CollateralCommand collateralCommand = this.collateralCommandFromApiJsonDeserializer
+                .commandFromApiJson(command.json());
         collateralCommand.validateForCreate();
 
         try {
@@ -73,12 +74,14 @@ public class CollateralWritePlatformServiceJpaRepositoryImpl implements Collater
             final LoanCollateral collateral = LoanCollateral.fromJson(loan, collateralType, command);
 
             /**
-             * Collaterals may be added only when the loan associated with them are yet to be approved
+             * Collaterals may be added only when the loan associated with them are yet to
+             * be approved
              **/
-            if (!loan.getStatus().isSubmittedAndPendingApproval()) {
-                throw new CollateralCannotBeCreatedException(
-                        LoanCollateralCannotBeCreatedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE, loan.getId());
-            }
+            // if (!loan.getStatus().isSubmittedAndPendingApproval()) {
+            // throw new CollateralCannotBeCreatedException(
+            // LoanCollateralCannotBeCreatedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE,
+            // loan.getId());
+            // }
 
             this.collateralRepository.saveAndFlush(collateral);
 
@@ -95,10 +98,12 @@ public class CollateralWritePlatformServiceJpaRepositoryImpl implements Collater
 
     @Transactional
     @Override
-    public CommandProcessingResult updateCollateral(final Long loanId, final Long collateralId, final JsonCommand command) {
+    public CommandProcessingResult updateCollateral(final Long loanId, final Long collateralId,
+            final JsonCommand command) {
 
         this.context.authenticatedUser();
-        final CollateralCommand collateralCommand = this.collateralCommandFromApiJsonDeserializer.commandFromApiJson(command.json());
+        final CollateralCommand collateralCommand = this.collateralCommandFromApiJsonDeserializer
+                .commandFromApiJson(command.json());
         collateralCommand.validateForUpdate();
 
         final Long collateralTypeId = collateralCommand.getCollateralTypeId();
@@ -114,16 +119,19 @@ public class CollateralWritePlatformServiceJpaRepositoryImpl implements Collater
             if (changes.containsKey(CollateralJSONinputParams.COLLATERAL_TYPE_ID.getValue())) {
 
                 collateralType = this.codeValueRepository
-                        .findOneByCodeNameAndIdWithNotFoundDetection(CollateralApiConstants.COLLATERAL_CODE_NAME, collateralTypeId);
+                        .findOneByCodeNameAndIdWithNotFoundDetection(CollateralApiConstants.COLLATERAL_CODE_NAME,
+                                collateralTypeId);
                 collateralForUpdate.setCollateralType(collateralType);
             }
 
             /**
-             * Collaterals may be updated only when the loan associated with them are yet to be approved
+             * Collaterals may be updated only when the loan associated with them are yet to
+             * be approved
              **/
             if (!loan.getStatus().isSubmittedAndPendingApproval()) {
                 throw new CollateralCannotBeUpdatedException(
-                        LoanCollateralCannotBeUpdatedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE, loan.getId());
+                        LoanCollateralCannotBeUpdatedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE,
+                        loan.getId());
             }
 
             if (!changes.isEmpty()) {
@@ -152,15 +160,18 @@ public class CollateralWritePlatformServiceJpaRepositoryImpl implements Collater
         }
 
         /**
-         * Collaterals may be deleted only when the loan associated with them are yet to be approved
+         * Collaterals may be deleted only when the loan associated with them are yet to
+         * be approved
          **/
         if (!loan.getStatus().isSubmittedAndPendingApproval()) {
             throw new CollateralCannotBeDeletedException(
-                    LoanCollateralCannotBeDeletedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE, loanId, collateralId);
+                    LoanCollateralCannotBeDeletedReason.LOAN_NOT_IN_SUBMITTED_AND_PENDING_APPROVAL_STAGE, loanId,
+                    collateralId);
         }
 
         this.collateralRepository.delete(collateral);
-        return new CommandProcessingResultBuilder().withCommandId(commandId).withLoanId(loanId).withEntityId(collateralId).build();
+        return new CommandProcessingResultBuilder().withCommandId(commandId).withLoanId(loanId)
+                .withEntityId(collateralId).build();
     }
 
     private void handleCollateralDataIntegrityViolation(final NonTransientDataAccessException dve) {
